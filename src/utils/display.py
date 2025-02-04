@@ -21,6 +21,8 @@ def print_trading_output(result: dict) -> None:
         result (dict): Dictionary containing decisions and analyst signals for multiple tickers
     """
     decisions = result.get("decisions")
+    analyst_signals = result.get("analyst_signals")
+
     if not decisions:
         print(f"{Fore.RED}No trading decisions available{Style.RESET_ALL}")
         return
@@ -29,6 +31,10 @@ def print_trading_output(result: dict) -> None:
     for ticker, decision in decisions.items():
         print(f"\n{Fore.WHITE}{Style.BRIGHT}Analysis for {Fore.CYAN}{ticker}{Style.RESET_ALL}")
         print(f"{Fore.WHITE}{Style.BRIGHT}{'=' * 50}{Style.RESET_ALL}")
+
+        # Get stock price and position
+        current_price = analyst_signals['risk_management_agent'][ticker]['current_price']
+        current_position = analyst_signals['risk_management_agent'][ticker]['reasoning']['current_position']
 
         # Prepare analyst signals table for this ticker
         table_data = []
@@ -78,6 +84,8 @@ def print_trading_output(result: dict) -> None:
                 "Confidence",
                 f"{Fore.YELLOW}{decision.get('confidence'):.1f}%{Style.RESET_ALL}",
             ],
+            ["Current Price", f"{Fore.CYAN}${current_price:,.2f}{Style.RESET_ALL}"],
+            ["Current Position", f"{Fore.CYAN}{current_position:,.2f}{Style.RESET_ALL}"],
         ]
 
         print(f"\n{Fore.WHITE}{Style.BRIGHT}TRADING DECISION:{Style.RESET_ALL} [{Fore.CYAN}{ticker}{Style.RESET_ALL}]")
@@ -86,27 +94,37 @@ def print_trading_output(result: dict) -> None:
         # Print Reasoning
         print(f"\n{Fore.WHITE}{Style.BRIGHT}Reasoning:{Style.RESET_ALL} {Fore.CYAN}{decision.get('reasoning')}{Style.RESET_ALL}")
 
+    # Individually print the decisions for each ticker above
+    # Print Portfolio Summary below
+
     # Print Portfolio Summary
     print(f"\n{Fore.WHITE}{Style.BRIGHT}PORTFOLIO SUMMARY:{Style.RESET_ALL}")
     portfolio_data = []
     for ticker, decision in decisions.items():
         action = decision.get("action", "").upper()
         action_color = {"BUY": Fore.GREEN, "SELL": Fore.RED, "HOLD": Fore.YELLOW}.get(action, Fore.WHITE)
+        
+        # Get stock price and position
+        current_price = analyst_signals['risk_management_agent'][ticker]['current_price']
+        current_position = analyst_signals['risk_management_agent'][ticker]['reasoning']['current_position']
+
         portfolio_data.append(
             [
                 f"{Fore.CYAN}{ticker}{Style.RESET_ALL}",
                 f"{action_color}{action}{Style.RESET_ALL}",
                 f"{action_color}{decision.get('quantity')}{Style.RESET_ALL}",
                 f"{Fore.YELLOW}{decision.get('confidence'):.1f}%{Style.RESET_ALL}",
+                f"{Fore.CYAN}${current_price:,.2f}{Style.RESET_ALL}",
+                f"{Fore.CYAN}{current_position:,.2f}{Style.RESET_ALL}",
             ]
         )
 
     print(
         tabulate(
             portfolio_data,
-            headers=[f"{Fore.WHITE}Ticker", "Action", "Quantity", "Confidence"],
+            headers=[f"{Fore.WHITE}Ticker", "Action", "Quantity", "Confidence", "Current Price", "Current Position"],
             tablefmt="grid",
-            colalign=("left", "center", "right", "right"),
+            colalign=("left", "center", "right", "right", "right", "right"),
         )
     )
 
