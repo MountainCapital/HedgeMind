@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from typing_extensions import Literal
 from utils.progress import progress
 from utils.llm import call_llm
+from agents.pm_prompt import pm_prompt_normal, pm_prompt_no_cash
 
 
 class PortfolioDecision(BaseModel):
@@ -99,59 +100,20 @@ def generate_trading_decision(
 ) -> PortfolioManagerOutput:
     """Attempts to get a decision from the LLM with retry logic"""
     # Create the prompt template
+    portfolio_cash = portfolio['cash']
+    if portfolio_cash <= 0:
+        pm_prompt = pm_prompt_no_cash()
+    else:
+        pm_prompt = pm_prompt_normal()
     template = ChatPromptTemplate.from_messages(
         [
             (
-              "system",
-              """You are a portfolio manager making final trading decisions based on multiple tickers.
-
-              Trading Rules:
-              - Only buy if you have available cash.
-              - Only sell if you currently hold shares of that ticker.
-              - Sell quantity must be ≤ current position shares.
-              - Buy quantity must be ≤ max_shares for that ticker.
-              - The max_shares values are pre-calculated to respect position limits.
-
-              Inputs:
-              - signals_by_ticker: dictionary of ticker → signals
-              - max_shares: maximum shares allowed per ticker
-              - portfolio_cash: current cash in portfolio
-              - portfolio_positions: current positions in portfolio
-              - current_prices: current prices for each ticker  
-              """,
+                "system",
+                pm_prompt.system,
             ),
             (
-              "human",
-              """Based on the team's analysis, make your trading decisions for each ticker.
-
-              Here are the signals by ticker:
-              {signals_by_ticker}
-
-              Current Prices:
-              {current_prices}
-
-              Maximum Shares Allowed For Purchases:
-              {max_shares}
-
-              Portfolio Cash: {portfolio_cash}
-              Current Positions: {portfolio_positions}
-
-              Output strictly in JSON with the following structure:
-              {{
-                "decisions": {{
-                  "TICKER1": {{
-                    "action": "buy/sell/hold",
-                    "quantity": integer,
-                    "confidence": float,
-                    "reasoning": "string"
-                  }},
-                  "TICKER2": {{
-                    ...
-                  }},
-                  ...
-                }}
-              }}
-              """,
+                "human",
+                pm_prompt.human,
             ),
         ]
     )
