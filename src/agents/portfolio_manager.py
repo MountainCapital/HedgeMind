@@ -101,10 +101,10 @@ def generate_trading_decision(
     """Attempts to get a decision from the LLM with retry logic"""
     # Create the prompt template
     portfolio_cash = portfolio['cash']
-    if portfolio_cash <= 0:
-        pm_prompt = pm_prompt_no_cash()
-    else:
-        pm_prompt = pm_prompt_normal()
+    # if portfolio_cash <= 0:
+    #     pm_prompt = pm_prompt_no_cash()
+    # else:
+    #     pm_prompt = pm_prompt_normal()
     template = ChatPromptTemplate.from_messages(
         [
             (
