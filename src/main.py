@@ -285,4 +285,9 @@ if __name__ == "__main__":
         model_name=model_choice,
         model_provider=model_provider,
     )
+
+    for k, v in result['decisions'].items():
+        if v['quantity'] == 0:
+            v['action'] = 'hold'
+
     print_trading_output(result)
