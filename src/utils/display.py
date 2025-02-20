@@ -75,15 +75,19 @@ def print_trading_output(result: dict) -> None:
 
         # Print Trading Decision Table
         action = decision.get("action", "").upper()
+        # print("\n\n", action, "\n\n")
         action_color = {"BUY": Fore.GREEN, "SELL": Fore.RED, "HOLD": Fore.YELLOW}.get(action, Fore.WHITE)
 
         decision_data = [
             ["Action", f"{action_color}{action}{Style.RESET_ALL}"],
             ["Quantity", f"{action_color}{decision.get('quantity')}{Style.RESET_ALL}"],
-            [
-                "Confidence",
-                f"{Fore.YELLOW}{decision.get('confidence'):.1f}%{Style.RESET_ALL}",
-            ],
+            # [
+            #     "Confidence",
+            #     f"{Fore.YELLOW}{decision.get('confidence') * 100:.1f}%{Style.RESET_ALL}",
+            # ],
+            ["Winning Rate", f"{Fore.YELLOW}{decision.get('winning_rate') * 100:.1f}%{Style.RESET_ALL}"],
+            ["Payoff Ratio", f"{Fore.YELLOW}{decision.get('payoff_ratio') * 100:.1f}%{Style.RESET_ALL}"],
+            ["Time-opportunity Cost", f"{Fore.YELLOW}{decision.get('time_opportunity_cost'):.1f}{Style.RESET_ALL}"],
             ["Current Price", f"{Fore.CYAN}${current_price:,.2f}{Style.RESET_ALL}"],
             ["Current Position", f"{Fore.CYAN}{current_position:,.2f}{Style.RESET_ALL}"],
         ]
@@ -120,7 +124,10 @@ def print_trading_output(result: dict) -> None:
                 f"{Fore.CYAN}{ticker}{Style.RESET_ALL}",
                 f"{action_color}{action}{Style.RESET_ALL}",
                 f"{action_color}{decision.get('quantity')}{Style.RESET_ALL}",
-                f"{Fore.YELLOW}{decision.get('confidence'):.1f}%{Style.RESET_ALL}",
+                # f"{Fore.YELLOW}{decision.get('confidence') * 100:.1f}%{Style.RESET_ALL}",
+                f"{Fore.YELLOW}{decision.get('winning_rate') * 100:.1f}%{Style.RESET_ALL}",
+                f"{Fore.YELLOW}{decision.get('payoff_ratio') * 100:.1f}%{Style.RESET_ALL}",
+                f"{Fore.YELLOW}{decision.get('time_opportunity_cost'):.1f}{Style.RESET_ALL}",
                 f"{Fore.CYAN}${current_price:,.2f}{Style.RESET_ALL}",
                 f"{Fore.CYAN}{current_position:,.2f}{Style.RESET_ALL}",
             ]
@@ -129,7 +136,7 @@ def print_trading_output(result: dict) -> None:
     print(
         tabulate(
             portfolio_data,
-            headers=[f"{Fore.WHITE}Ticker", "Action", "Quantity", "Confidence", "Current Price", "Current Position"],
+            headers=[f"{Fore.WHITE}Ticker", "Action", "Quantity", "Winning Rate", "Payoff Ratio", "Time-opportunity Cost", "Current Price", "Current Position"],
             tablefmt="grid",
             colalign=("left", "center", "right", "right", "right", "right"),
         )

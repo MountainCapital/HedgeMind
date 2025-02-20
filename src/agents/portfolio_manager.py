@@ -14,6 +14,9 @@ class PortfolioDecision(BaseModel):
     action: Literal["buy", "sell", "short", "cover", "hold"]
     quantity: int = Field(description="Number of shares to trade")
     confidence: float = Field(description="Confidence in the decision, between 0.0 and 100.0")
+    winning_rate: float = Field(description="The percentage of trades that result in a profit out of the total trades expected")
+    payoff_ratio: float = Field(description="The averge profit from winning trades divided by the average loss from losing trades expected, indicating the risk-reward balance")
+    time_opportunity_cost: float = Field(description="The potential gains or benefits lost by commiting capital to a particular investment instead of other available options")
     reasoning: str = Field(description="Reasoning for the decision")
 
 
@@ -105,6 +108,82 @@ def generate_trading_decision(
     #     pm_prompt = pm_prompt_no_cash()
     # else:
     #     pm_prompt = pm_prompt_normal()
+
+    # template = ChatPromptTemplate.from_messages(
+    #     [
+    #         (
+    #           "system",
+    #           """You are a portfolio manager making final trading decisions based on multiple tickers.
+
+    #           Trading Rules:
+    #           - For long positions:
+    #             * Only buy if you have available cash
+    #             * Only sell if you currently hold long shares of that ticker
+    #             * Sell quantity must be ≤ current long position shares
+    #             * Buy quantity must be ≤ max_shares for that ticker
+              
+    #           - For short positions:
+    #             * Only short if you have available margin (50% of position value required)
+    #             * Only cover if you currently have short shares of that ticker
+    #             * Cover quantity must be ≤ current short position shares
+    #             * Short quantity must respect margin requirements
+              
+    #           - The max_shares values are pre-calculated to respect position limits
+    #           - Consider both long and short opportunities based on signals
+    #           - Maintain appropriate risk management with both long and short exposure
+
+    #           Available Actions:
+    #           - "buy": Open or add to long position
+    #           - "sell": Close or reduce long position
+    #           - "short": Open or add to short position
+    #           - "cover": Close or reduce short position
+    #           - "hold": No action
+
+    #           Inputs:
+    #           - signals_by_ticker: dictionary of ticker → signals
+    #           - max_shares: maximum shares allowed per ticker
+    #           - portfolio_cash: current cash in portfolio
+    #           - portfolio_positions: current positions (both long and short)
+    #           - current_prices: current prices for each ticker
+    #           - margin_requirement: current margin requirement for short positions
+    #           """,
+    #         ),
+    #         (
+    #           "human",
+    #           """Based on the team's analysis, make your trading decisions for each ticker.
+
+    #           Here are the signals by ticker:
+    #           {signals_by_ticker}
+
+    #           Current Prices:
+    #           {current_prices}
+
+    #           Maximum Shares Allowed For Purchases:
+    #           {max_shares}
+
+    #           Portfolio Cash: {portfolio_cash}
+    #           Current Positions: {portfolio_positions}
+    #           Current Margin Requirement: {margin_requirement}
+
+    #           Output strictly in JSON with the following structure:
+    #           {{
+    #             "decisions": {{
+    #               "TICKER1": {{
+    #                 "action": "buy/sell/short/cover/hold",
+    #                 "quantity": integer,
+    #                 "confidence": float,
+    #                 "reasoning": "string"
+    #               }},
+    #               "TICKER2": {{
+    #                 ...
+    #               }},
+    #               ...
+    #             }}
+    #           }}
+    #           """,
+    #         ),
+    #     ]
+    # )
     template = ChatPromptTemplate.from_messages(
         [
             (
@@ -142,6 +221,15 @@ def generate_trading_decision(
               - portfolio_positions: current positions (both long and short)
               - current_prices: current prices for each ticker
               - margin_requirement: current margin requirement for short positions
+
+              Some Definitions of Output:
+              - action: "buy/sell/short/cover/hold"
+              - quantity: number of shares to trade
+              - reasoning: brief explanation of the decision
+              - confidence: confidence level between 0-1
+              - winning rate: the percentage of trades that result in a profit out of the total trades expected
+              - payoff ratio: the averge profit from winning trades divided by the average loss from losing trades expected, indicating the risk-reward balance
+              - time-oppotunity cost: the potential gains or benefits lost by commiting capital to a particular investment instead of other available options
               """,
             ),
             (
@@ -168,6 +256,9 @@ def generate_trading_decision(
                     "action": "buy/sell/short/cover/hold",
                     "quantity": integer,
                     "confidence": float,
+                    "winning_rate": float,
+                    "payoff_ratio": float,
+                    "time_opportunity_cost": float,
                     "reasoning": "string"
                   }},
                   "TICKER2": {{
@@ -195,6 +286,7 @@ def generate_trading_decision(
 
     # Create default factory for PortfolioManagerOutput
     def create_default_portfolio_output():
-        return PortfolioManagerOutput(decisions={ticker: PortfolioDecision(action="hold", quantity=0, confidence=0.0, reasoning="Error in portfolio management, defaulting to hold") for ticker in tickers})
+        # return PortfolioManagerOutput(decisions={ticker: PortfolioDecision(action="hold", quantity=0, confidence=0.0, reasoning="Error in portfolio management, defaulting to hold") for ticker in tickers})
+        return PortfolioManagerOutput(decisions={ticker: PortfolioDecision(action="hold", quantity=0, winning_rate=0.0, payoff_ratio=0.0, time_opportunity_cost=0.0, confidence=0.0, reasoning="Error in portfolio management, defaulting to hold") for ticker in tickers})
 
     return call_llm(prompt=prompt, model_name=model_name, model_provider=model_provider, pydantic_model=PortfolioManagerOutput, agent_name="portfolio_management_agent", default_factory=create_default_portfolio_output)
