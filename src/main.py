@@ -289,5 +289,8 @@ if __name__ == "__main__":
     for k, v in result['decisions'].items():
         if v['quantity'] == 0:
             v['action'] = 'hold'
+            v['winning_rate'] = 0
+            v['payoff_ratio'] = 0
+            v['time_oppotunity_cost'] = 0
 
     print_trading_output(result)

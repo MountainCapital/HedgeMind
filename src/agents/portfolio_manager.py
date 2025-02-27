@@ -225,11 +225,14 @@ def generate_trading_decision(
               Some Definitions of Output:
               - action: "buy/sell/short/cover/hold"
               - quantity: number of shares to trade
-              - reasoning: brief explanation of the decision
+              - reasoning: explanation of the decision and explanation of why these values of winning rate, payoff ratio, and time-opportunity cost
               - confidence: confidence level between 0-1
-              - winning rate: the percentage of trades that result in a profit out of the total trades expected
-              - payoff ratio: the averge profit from winning trades divided by the average loss from losing trades expected, indicating the risk-reward balance
-              - time-oppotunity cost: the potential gains or benefits lost by commiting capital to a particular investment instead of other available options
+              - winning rate: the percentage of trades that result in a profit out of the total trades expected, precision is important
+              - payoff ratio: the averge profit from winning trades divided by the average loss from losing trades expected, indicating the risk-reward balance, precision important
+              - time-oppotunity cost: the potential gains or benefits lost by commiting capital to a particular investment instead of other available options, precision is important
+
+              - Instead of giving some causal values to winning rate, payoff ratio, and time-opportunity cost, please analyze the signals throughly and give the values based on your analysis.
+              - The winning rate, payoff ratio, and time-opportunity cost are important metrics to evaluate the performance of the trading strategy.
               """,
             ),
             (
